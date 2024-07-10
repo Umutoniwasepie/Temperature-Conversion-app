@@ -1,42 +1,60 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(TempConversionApp());
+void main() {
+  runApp(TemperatureConversionApp());
+}
 
-class TempConversionApp extends StatelessWidget {
+class TemperatureConversionApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Temperature Converter',
+      title: 'Temperature Conversion App',
       theme: ThemeData(
         primarySwatch: Colors.teal,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: TempConversionHomePage(),
+      home: TemperatureConversionScreen(),
     );
   }
 }
 
-class TempConversionHomePage extends StatefulWidget {
+class TemperatureConversionScreen extends StatefulWidget {
   @override
-  _TempConversionHomePageState createState() => _TempConversionHomePageState();
+  _TemperatureConversionScreenState createState() =>
+      _TemperatureConversionScreenState();
 }
 
-class _TempConversionHomePageState extends State<TempConversionHomePage> {
+class _TemperatureConversionScreenState
+    extends State<TemperatureConversionScreen> {
   final TextEditingController _controller = TextEditingController();
-  String _conversionType = 'F to C';
-  String _result = '';
-  List<String> _history = [];
+  bool _isCelsius = true;
+  String _convertedTemperature = '';
+  List<String> _conversionHistory = [];
 
-  void _convert() {
+  void _convertTemperature() {
+    if (_controller.text.isEmpty) return;
+
+    double inputTemperature = double.parse(_controller.text);
+    double convertedTemperature;
+
+    if (_isCelsius) {
+      convertedTemperature = (inputTemperature * 9 / 5) + 32;
+      _conversionHistory.insert(0,
+          'C to F: ${inputTemperature.toStringAsFixed(1)} => ${convertedTemperature.toStringAsFixed(1)}');
+    } else {
+      convertedTemperature = (inputTemperature - 32) * 5 / 9;
+      _conversionHistory.insert(0,
+          'F to C: ${inputTemperature.toStringAsFixed(1)} => ${convertedTemperature.toStringAsFixed(1)}');
+    }
+
     setState(() {
-      double input = double.tryParse(_controller.text) ?? 0;
-      double output;
-      if (_conversionType == 'F to C') {
-        output = (input - 32) * 5 / 9;
-      } else {
-        output = input * 9 / 5 + 32;
-      }
-      _result = output.toStringAsFixed(2);
-      _history.insert(0, '$_conversionType: $input => $_result');
+      _convertedTemperature = convertedTemperature.toStringAsFixed(1);
+    });
+  }
+
+  void _toggleConversion() {
+    setState(() {
+      _isCelsius = !_isCelsius;
     });
   }
 
@@ -44,75 +62,140 @@ class _TempConversionHomePageState extends State<TempConversionHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Temperature Converter'),
+        title: Text('Temperature Conversion'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: ListTile(
-                    title: const Text('Fahrenheit to Celsius'),
-                    leading: Radio<String>(
-                      value: 'F to C',
-                      groupValue: _conversionType,
-                      onChanged: (String? value) {
-                        setState(() {
-                          _conversionType = value!;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListTile(
-                    title: const Text('Celsius to Fahrenheit'),
-                    leading: Radio<String>(
-                      value: 'C to F',
-                      groupValue: _conversionType,
-                      onChanged: (String? value) {
-                        setState(() {
-                          _conversionType = value!;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: 'Enter Temperature',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _convert,
-              child: Text('Convert'),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Converted Temperature: $_result',
-              style: TextStyle(fontSize: 20),
-            ),
+            _buildResultSection(),
             SizedBox(height: 20),
             Expanded(
-              child: ListView.builder(
-                itemCount: _history.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(_history[index]),
-                  );
-                },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Enter Temperature',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          controller: _controller,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Degree',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        flex: 1,
+                        child: DropdownButtonFormField<String>(
+                          value: _isCelsius ? 'C' : 'F',
+                          items: <DropdownMenuItem<String>>[
+                            DropdownMenuItem<String>(
+                              value: 'C',
+                              child: Text('°C'),
+                            ),
+                            DropdownMenuItem<String>(
+                              value: 'F',
+                              child: Text('°F'),
+                            ),
+                          ],
+                          onChanged: (String? value) {
+                            if (value != null) {
+                              _toggleConversion();
+                            }
+                          },
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Text('Convert In',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  DropdownButtonFormField<String>(
+                    value: _isCelsius ? 'Fahrenheit (°F)' : 'Celsius (°C)',
+                    items: <DropdownMenuItem<String>>[
+                      DropdownMenuItem<String>(
+                        value: 'Fahrenheit (°F)',
+                        child: Text('Fahrenheit (°F)'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'Celsius (°C)',
+                        child: Text('Celsius (°C)'),
+                      ),
+                    ],
+                    onChanged: (String? value) {
+                      if (value != null) {
+                        _toggleConversion();
+                      }
+                    },
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _convertTemperature,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromARGB(255, 109, 204, 195),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 50, vertical: 20),
+                        textStyle: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      child: Text('Convert'),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Text('History',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 10),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _conversionHistory.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(_conversionHistory[index]),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultSection() {
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Color.fromARGB(255, 166, 233, 229),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Center(
+        child: Text(
+          _convertedTemperature.isNotEmpty
+              ? '$_convertedTemperature ${_isCelsius ? '°F' : '°C'}'
+              : '',
+          style: TextStyle(
+              fontSize: 50, fontWeight: FontWeight.bold, color: Colors.teal),
         ),
       ),
     );
