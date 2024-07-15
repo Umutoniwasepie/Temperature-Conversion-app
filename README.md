@@ -15,10 +15,8 @@ The Temperature Conversion App allows users to convert temperatures between Fahr
 
 ## Screenshots
 
-![Portrait Mode]
 ![portrait_mode](https://github.com/user-attachments/assets/e34656ff-9214-4df0-99d5-70dfe92c1780)
 
-![Landscape Mode]
 ![landscape_mode](https://github.com/user-attachments/assets/422b0c2b-cbd1-432f-bf8e-28e0f1e5554b)
 
 
